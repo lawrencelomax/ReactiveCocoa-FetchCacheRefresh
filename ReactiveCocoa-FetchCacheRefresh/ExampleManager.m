@@ -67,12 +67,21 @@
 - (RACSignal *)fetchNumberPrivate
 {
     NSLog(@"Performing potentially time-consuming fetch...");
-
-    return [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+  
+    @weakify(self)
+    RACSignal *incrementingSignal = [RACSignal createSignal:^ RACDisposable * (id<RACSubscriber> subscriber) {
+        @strongify(self)
+      
         [subscriber sendNext:self.everBiggerNumber];
-
-        return [RACDisposable new];
+        [subscriber sendCompleted];
+      
+        return nil;
     }];
+  
+    return [[[[self rac_signalForSelector:@selector(refreshNumber)]
+      startWith:nil]
+      mapReplace:incrementingSignal]
+      flatten];
 }
 
 
