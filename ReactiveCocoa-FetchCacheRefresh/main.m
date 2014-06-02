@@ -17,17 +17,17 @@ int main(int argc, const char * argv[])
     @autoreleasepool {
         ExampleManager *manager = [ExampleManager new];
 
-        [[manager fetchNumber] subscribeNext:^(NSNumber *number) {
+        [[manager latestNumber] subscribeNext:^(NSNumber *number) {
             NSLog(@"Subscriber #1: %@", number);
         }];
 
-        [[manager fetchNumber] subscribeNext:^(NSNumber *number) {
+        [[manager latestNumber] subscribeNext:^(NSNumber *number) {
             NSLog(@"Subscriber #2: %@", number);
         }];
 
         [manager refreshNumber];
 
-        [[manager fetchNumber] subscribeNext:^(NSNumber *number) {
+        [[manager latestNumber] subscribeNext:^(NSNumber *number) {
             NSLog(@"Subscriber #3: %@", number);
         }];
 

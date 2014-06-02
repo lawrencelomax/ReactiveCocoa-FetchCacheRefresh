@@ -14,7 +14,7 @@
 
 @interface ExampleManager : NSObject
 
-- (RACSignal *)fetchNumber;
+- (RACSignal *)latestNumber;
 - (void)refreshNumber;
 
 @end

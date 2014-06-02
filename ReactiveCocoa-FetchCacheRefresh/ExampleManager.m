@@ -13,8 +13,6 @@
 
 @interface ExampleManager ()
 
-@property (strong, nonatomic) RACSignal *fetchNumber;
-@property (strong, nonatomic) NSNumber *everBiggerNumber;
 @property (strong, nonatomic) NSNumber *memoizedNumber;
 
 @end
@@ -26,62 +24,32 @@
 
 #pragma mark - Public API
 
-
-- (RACSignal *)fetchNumber
-{
-    if (!_fetchNumber) {
-        _fetchNumber = RACObserve(self, memoizedNumber);
-        [self refreshNumber];
-    }
-
-    return _fetchNumber;
-}
-
 - (void)refreshNumber
 {
-    NSLog(@"Performing refresh...");
-
-    @weakify(self);
-    [[self fetchNumberPrivate] subscribeNext:^(NSNumber *number) {
-        @strongify(self);
-        self.memoizedNumber = number;
-    }];
+  // The behaviour for refreshing is handled by rac_signalForSelector
+  NSLog(@"Refreshing....");
 }
 
-
-
-#pragma mark - Private API
-
-
-- (NSNumber *)everBiggerNumber
+- (RACSignal *)latestNumber
 {
-    if (!_everBiggerNumber) {
-        _everBiggerNumber = @0;
+    if (!self.memoizedNumber) {
+      RAC(self, memoizedNumber) = [self fetchNumberPrivate];
     }
 
-    _everBiggerNumber = @(_everBiggerNumber.integerValue + 1);
-
-    return _everBiggerNumber;
+    return RACObserve(self, memoizedNumber);
 }
+
+#pragma mark - Private API
 
 - (RACSignal *)fetchNumberPrivate
 {
     NSLog(@"Performing potentially time-consuming fetch...");
   
-    @weakify(self)
-    RACSignal *incrementingSignal = [RACSignal createSignal:^ RACDisposable * (id<RACSubscriber> subscriber) {
-        @strongify(self)
-      
-        [subscriber sendNext:self.everBiggerNumber];
-        [subscriber sendCompleted];
-      
-        return nil;
-    }];
-  
-    return [[[[self rac_signalForSelector:@selector(refreshNumber)]
-      startWith:nil]
-      mapReplace:incrementingSignal]
-      flatten];
+    return [[[self rac_signalForSelector:@selector(refreshNumber)]
+      startWith:@0]
+      scanWithStart:@0 reduce:^(NSNumber *running, id next) {
+        return @(running.integerValue + 1);
+      }];
 }
 
 
